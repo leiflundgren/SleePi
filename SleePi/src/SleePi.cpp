@@ -28,6 +28,7 @@ CascadeClassifier face_cascade;
 shape_predictor sp;
 VideoWriter outputVideo;
 
+
 int euler_distance(dlib::point p1, dlib::point p2);
 float get_EAR(full_object_detection landmarks);
 float get_threshold(VideoCapture cap);
@@ -35,6 +36,9 @@ static dlib::rectangle openCVRectToDlib(cv::Rect r);
 int detect_face(Mat frame, cv::Rect &face);
 void draw_EAR(Mat frame, float EAR);
 void draw_eye_contours(Mat frame, full_object_detection shapes);
+
+
+
 
 // Main function for executing the program
 int main(int argc, char **argv)
@@ -97,6 +101,9 @@ int main(int argc, char **argv)
     std::thread thread3(init_alarm);
     thread3.detach();
 
+
+    int last_face_result = -1;
+
     // Start main loop
     while (true)
     {
@@ -119,9 +126,9 @@ int main(int argc, char **argv)
 
         cv::Rect face;
         // gets a face as a rectangle object, returns 1 if face was not found
-        int result = detect_face(grayscale_frame, face);
+        int face_count = detect_face(grayscale_frame, face);
         // No face was detected
-        if (result == 1)
+        if (face_count == 0)
         {
             if ((SHOW_VIDEO_OUTPUT || SAVE_TO_FILE))
             {
@@ -134,8 +141,8 @@ int main(int argc, char **argv)
                             2);
             }
         }
-        // Got 1 face
-        else if (result == 0)
+        // Got 1 face (or more)
+        else 
         {
             // Display rectange of detected face
             if ((SHOW_VIDEO_OUTPUT || SAVE_TO_FILE) && SHOW_FACE_DETECTION)
@@ -245,7 +252,7 @@ int main(int argc, char **argv)
     return 0;
 }
 // Finds a face in a frame and stores it in a cv::Rect object
-// Returns 1 if no face detected and 0 if 1 or more faces detected
+// Returns Number of faces detected, &face will be the face with biggest area
 int detect_face(Mat frame, cv::Rect &face)
 {
     std::vector<Rect> faces;
@@ -256,15 +263,18 @@ int detect_face(Mat frame, cv::Rect &face)
     // If no faces detected return 1
     if (face_count == 0)
     {
-        return 1;
+    }
+    // take the single face found
+    else if (face_count == 1)
+    {
+        face = faces[0];
     }
     // If more than one face is found, take the biggest one
-    else if (face_count > 1)
+    else // face_count > 1
     {
-        cout << "Expected only 1 face\n";
-        int max_size = faces[0].area();
-        int max_index = 0;
-        for (int i = 1; i < face_count; i++)
+        size_t max_size = faces[0].area();
+        size_t max_index = 0;
+        for (size_t i = 1; i < face_count; i++)
         {
             if (faces[i].area() > max_size)
             {
@@ -273,13 +283,9 @@ int detect_face(Mat frame, cv::Rect &face)
             }
             face = faces[max_index];
         }
+        cout << "Expected only 1 face. Face index " << max_index << " is the biggest face\n";
     }
-    // take the single face found
-    else if (face_count == 1)
-    {
-        face = faces[0];
-    }
-    return 0;
+    return face_count;
 }
 // Draws EAR value on a frame
 void draw_EAR(Mat frame, float EAR)

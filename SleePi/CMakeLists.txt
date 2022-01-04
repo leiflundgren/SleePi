@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 # set the project name
 project(SleePI)
 
-SET("OpenCV_DIR" "C:/OpenCV/")
+SET("OpenCV_DIR" "S:/apps/OpenCV-4.5.5/opencv/build/")
 
 # Disable in-source builds to prevent source tree corruption.
 if(" ${CMAKE_SOURCE_DIR}" STREQUAL " ${CMAKE_BINARY_DIR}")
@@ -35,6 +35,7 @@ include_directories(SleePi
 add_executable(SleePi
   ${CMAKE_SOURCE_DIR}/src/SleePi.cpp
   ${CMAKE_SOURCE_DIR}/src/play_audio.cpp
+  ${CMAKE_SOURCE_DIR}/src/Helpers.cpp
   )
 
 # Link libraries

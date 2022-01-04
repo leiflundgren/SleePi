@@ -37,7 +37,7 @@ const float TIME_THRESHOLD = 1.0;
 // Displays video output in a window
 const bool SHOW_VIDEO_OUTPUT = true;
 // Saves the output video to a file
-const bool SAVE_TO_FILE = false;
+const bool SAVE_TO_FILE = true;
 // If both SHOW_VIDEO_OUTPUT and SAVE_TO_FILE are false, the following parameters have no effect.
 // Shows a rectangle around the detected face
 const bool SHOW_FACE_DETECTION = true;
@@ -47,6 +47,8 @@ const bool SHOW_FACIAL_LANDMARKS = false;
 const bool SHOW_EYE_CONTOURS = true;
 // Displays the current EAR value
 const bool SHOW_EAR = true;
+
+const bool LOG_EVENTS_STDOUT = true;
 
 // Audio configuration
 
