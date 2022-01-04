@@ -18,6 +18,7 @@
 
 #include "play_audio.h"
 #include "config.h"
+#include "Helpers.h"
 
 using namespace cv;
 using namespace std;
@@ -46,13 +47,22 @@ int main(int argc, char **argv)
     // Set the relative locations of face cascade and shape perdictor
     String face_cascade_name = "../static/haarcascade_frontalface_alt.xml";
     String shape_predictor_path = "../static/shape_predictor_68_face_landmarks.dat";
+
+
+    cout << Timestamp() << "loading shapes from " << shape_predictor_path << endl;
+
     // Load the shape predictor for facial landmark detection
     deserialize(shape_predictor_path) >> sp;
+
+    cout << Timestamp() << "loading face_cascade from " << face_cascade_name << endl;
+
     if (!face_cascade.load(face_cascade_name))
     {
-        cout << "--(!)Error loading face cascade\n";
+        cout << Timestamp() << "--(!)Error loading face cascade\n";
         return -1;
     };
+    cout << Timestamp() << "face_cascade loaded successfully " << endl;
+   
     // This can also be used with a video input: VideoCapture cap("PATH_TO_VIDEO")
     VideoCapture cap;
     // Open the default camera, use something different if system has more cameras;
@@ -62,7 +72,7 @@ int main(int argc, char **argv)
     cap.open(deviceID, apiID);
     if (!cap.isOpened())
     {
-        cerr << "ERROR! Unable to open camera\n";
+        cerr << Timestamp() << "ERROR! Unable to open camera\n";
         return -1;
     }
     // Does not work when using with the camera module
@@ -78,7 +88,7 @@ int main(int argc, char **argv)
         outputVideo.open("./capture.avi", VideoWriter::fourcc('D', 'I', 'V', 'X'), 24, vid_out, true);
         if (!outputVideo.isOpened())
         {
-            cerr << "Could not open the output video file for write\n";
+            cerr << Timestamp() << "Could not open the output video file for write\n";
             return -1;
         }
     }
@@ -93,7 +103,7 @@ int main(int argc, char **argv)
     thread1.detach();
     // Set the dynamic threhold for sleepiness
     float thresh = get_threshold(cap);
-    cout << "thresh got " << thresh << "\n";
+    cout << Timestamp() << "thresh got " << thresh << "\n";
     // Play the sound of calibration completion
     std::thread thread2(play_calibartion_completed);
     thread2.detach();
@@ -101,8 +111,10 @@ int main(int argc, char **argv)
     std::thread thread3(init_alarm);
     thread3.detach();
 
+    cout << Timestamp() << "###########################################\n\nLoaded, detection starting" << endl;
 
-    int last_face_result = -1;
+    int last_face_result = 0;
+    time_t last_face_change = 0L;
 
     // Start main loop
     while (true)
@@ -114,7 +126,7 @@ int main(int argc, char **argv)
         cap.read(original_frame);
         if (original_frame.empty())
         {
-            cerr << "ERROR! blank frame grabbed\n";
+            cerr << Timestamp() << "ERROR! blank frame grabbed\n";
             break;
         }
         // Resize image to be smaller for faster processing, the amount is determined by SCALE_FACTOR
@@ -140,10 +152,25 @@ int main(int argc, char **argv)
                             CV_RGB(255, 0, 0),
                             2);
             }
+            if (last_face_change != 0)
+            {
+                cout << Timestamp() << "NO FACE DETECTED. (We have had a face since " << Timestamp(last_face_change) << " " << endl;
+                last_face_change = 0;
+                last_face_change = time(NULL);
+            }
         }
         // Got 1 face (or more)
         else 
         {
+            if (last_face_change == 0)
+            {
+                cout << Timestamp() << "FACE DETECTED. (We have been face-less since " << Timestamp(last_face_change) << endl;
+                last_face_change = 1;
+                last_face_change = time(NULL);
+            }
+
+
+
             // Display rectange of detected face
             if ((SHOW_VIDEO_OUTPUT || SAVE_TO_FILE) && SHOW_FACE_DETECTION)
             {
@@ -231,7 +258,7 @@ int main(int argc, char **argv)
                 double time_for_cycle = duration_cast<duration<double>>(end_fps - start_fps).count();
                 // frames processed per second
                 double real_fps = 1.0 / time_for_cycle;
-                cout << "fps " << real_fps << "\n";
+                cout << Timestamp() << "fps " << real_fps << "\n";
             }
         }
         // Save frame to file
@@ -283,7 +310,7 @@ int detect_face(Mat frame, cv::Rect &face)
             }
             face = faces[max_index];
         }
-        cout << "Expected only 1 face. Face index " << max_index << " is the biggest face\n";
+        cout << Timestamp() << "Expected only 1 face. Face index " << max_index << " is the biggest face\n";
     }
     return face_count;
 }
@@ -356,7 +383,7 @@ float get_threshold(VideoCapture cap)
         cap.read(original_frame);
         if (original_frame.empty())
         {
-            cerr << "ERROR! blank frame grabbed\n";
+            cerr << Timestamp() << "ERROR! blank frame grabbed\n";
             break;
         }
         // Resize image to be smaller for faster processing, the amount is determined by SCALE_FACTOR
