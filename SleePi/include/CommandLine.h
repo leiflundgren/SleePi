@@ -8,7 +8,6 @@
 /// </summary>
 struct CommandLine
 {
-    CommandLine(int argc, const char** argv);
     CommandLine();
     ~CommandLine();
 
@@ -24,6 +23,7 @@ struct CommandLine
     bool show_all_factial_landmarks;
     bool log_events_stdout;
     bool play_alarm;
+    double ear_threshold;
     std::string capture_filename;
 
 

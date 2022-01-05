@@ -33,11 +33,11 @@ VideoWriter outputVideo;
 
 
 int euler_distance(dlib::point p1, dlib::point p2);
-float get_EAR(full_object_detection landmarks);
-float get_threshold(VideoCapture cap);
+double get_EAR(full_object_detection landmarks);
+double get_threshold(VideoCapture cap);
 static dlib::rectangle openCVRectToDlib(cv::Rect r);
 int detect_face(Mat frame, cv::Rect &face);
-void draw_EAR(Mat frame, float EAR);
+void draw_EAR(Mat frame, double EAR);
 void draw_eye_contours(Mat frame, full_object_detection shapes);
 //
 //String data_folder = "../static/";
@@ -131,18 +131,31 @@ int main(int argc, const char **argv)
     // Load audio files and initialise playback
     audio.init_playback(args.CALIBRATION_START_LOC, args.CALIBRATION_END_LOC, args.play_alarm ? args.ALARM_LOC : "");
 
-    Mat original_frame, scaled_frame, grayscale_frame;
-    float accumulator = 1.0;
+    double accumulator = 1.0;
     auto start_thresh = steady_clock::now();
-    // Detaching because the capture can start as the instruction is being played
-    std::thread thread1(&PlayAudio::play_calibration_start, &audio);
-    thread1.detach();
-    // Set the dynamic threhold for sleepiness
-    float thresh = get_threshold(cap);
-    cout << Timestamp() << "thresh got " << thresh << "\n";
-    // Play the sound of calibration completion
-    std::thread thread2(&PlayAudio::play_calibartion_completed, &audio);
-    thread2.detach();
+
+
+    
+    double thresh;
+    if (args.ear_threshold > 0.0)
+    {
+        thresh = args.ear_threshold;
+        cout << Timestamp() << "Pre-configured threshold got " << thresh << endl;
+    }
+    else 
+    {
+        // Detaching because the capture can start as the instruction is being played
+        std::thread thread1(&PlayAudio::play_calibration_start, &audio);
+        thread1.detach();
+        // Set the dynamic threhold for sleepiness
+        thresh = get_threshold(cap);
+        cout << Timestamp() << "thresh got " << thresh << "\n";
+
+        // Play the sound of calibration completion
+        std::thread thread2(&PlayAudio::play_calibartion_completed, &audio);
+        thread2.detach();
+    }
+
     // Initialise the alarm file for playback
     std::thread thread3;
     if (args.play_alarm)
@@ -156,9 +169,13 @@ int main(int argc, const char **argv)
     int last_face_result = 0;
     time_t last_face_change = 0L;
 
+    bool video_started = false;
+
     // Start main loop
     while (true)
     {
+        Mat original_frame, scaled_frame, grayscale_frame;
+
         // Start clock for counting the time for executing the loop
         auto start_fps = steady_clock::now();
 
@@ -182,7 +199,7 @@ int main(int argc, const char **argv)
         // No face was detected
         if (face_count == 0)
         {
-            if ((args.show_video || args.capture_to_file))
+            if (args.show_video && video_started || args.capture_to_file)
             {
                 cv::putText(scaled_frame,
                             "NO FACE DETECTED",
@@ -205,7 +222,7 @@ int main(int argc, const char **argv)
        
 
             // Display rectange of detected face
-            if ((args.show_video || args.capture_to_file) && args.show_face_detection)
+            if ((args.show_video && video_started || args.capture_to_file) && args.show_face_detection)
             {
                 cv::rectangle(scaled_frame, face, Scalar(255, 0, 0), 1, 8, 0);
             }
@@ -219,9 +236,9 @@ int main(int argc, const char **argv)
             // Predict facial landmark locations and store it in shapes object
             shapes = sp(dlib_img, face_dlib);
             // Display facial landmarks
-            if ((args.show_video || args.capture_to_file) && args.show_all_factial_landmarks)
+            if ((args.show_video && video_started || args.capture_to_file) && args.show_all_factial_landmarks)
             {
-                for (int i = 0; i <= 68; i++)
+                for (int i = 0, max = shapes.num_parts(); i < max; i++)
                 {
                     cv::circle(scaled_frame,
                                Point(shapes.part(i).x(), shapes.part(i).y()),
@@ -230,17 +247,17 @@ int main(int argc, const char **argv)
                 }
             }
             // Draw contours around the eyes
-            if ((args.show_video || args.capture_to_file) && args.show_eye_contour)
+            if ((args.show_video && video_started || args.capture_to_file) && args.show_eye_contour)
             {
                 draw_eye_contours(scaled_frame, shapes);
             }
 
             // get EAR
-            float avg_EAR = get_EAR(shapes);
+            double avg_EAR = get_EAR(shapes);
             // Calculate EMA
             accumulator = ALPHA * avg_EAR + (1.0 - ALPHA) * accumulator;
             // Show current EAR
-            if (args.show_video && args.show_ear_score)
+            if (args.show_video && video_started && args.show_ear_score)
             {
                 draw_EAR(scaled_frame, avg_EAR);
             }
@@ -254,7 +271,7 @@ int main(int argc, const char **argv)
                 if (elapsed_seconds >= TIME_THRESHOLD)
                 {
                     // Show sleepiness indicator
-                    if ((args.show_video || args.capture_to_file))
+                    if ((args.show_video && video_started || args.capture_to_file))
                     {
                         cv::putText(scaled_frame,
                                     "SLEEPINESS DETECTED",
@@ -320,6 +337,7 @@ int main(int argc, const char **argv)
         if (args.show_video)
         {
             cv::imshow("Live", scaled_frame);
+            video_started = true;
             // Stop on any keypress (required for imshow function)
             if (waitKey(1) >= 0)
                 break;
@@ -364,7 +382,7 @@ int detect_face(Mat frame, cv::Rect &face)
     return face_count;
 }
 // Draws EAR value on a frame
-void draw_EAR(Mat frame, float EAR)
+void draw_EAR(Mat frame, double EAR)
 {
     // Convert EAR to string
     std::stringstream stream;
@@ -400,19 +418,19 @@ void draw_eye_contours(Mat frame, full_object_detection shapes)
     drawContours(frame, eye_countours, -1, color, 1);
 }
 // Calculates the EAR values from the facial landmarks
-float get_EAR(full_object_detection landmarks)
+double get_EAR(full_object_detection landmarks)
 {
     int left_height1 = euler_distance(landmarks.part(37), landmarks.part(41));
     int left_height2 = euler_distance(landmarks.part(38), landmarks.part(40));
     int left_length = euler_distance(landmarks.part(36), landmarks.part(39));
-    float left_EAR = (left_height1 + left_height2) / (2.0 * left_length);
+    double left_EAR = (left_height1 + left_height2) / (2.0 * left_length);
 
     int right_height1 = euler_distance(landmarks.part(43), landmarks.part(47));
     int right_height2 = euler_distance(landmarks.part(44), landmarks.part(46));
     int right_length = euler_distance(landmarks.part(42), landmarks.part(45));
-    float right_EAR = (right_height1 + right_height2) / (2.0 * right_length);
+    double right_EAR = (right_height1 + right_height2) / (2.0 * right_length);
 
-    float average_EAR = (left_EAR + right_EAR) / 2.0;
+    double average_EAR = (left_EAR + right_EAR) / 2.0;
     // cout<<"right EAR "<<right_EAR<<"\n"<<"left EAR "<<left_EAR<<"\n"<<"average EAR "<<average_EAR<<"\n";
     return average_EAR;
 }
@@ -422,9 +440,9 @@ int euler_distance(dlib::point p1, dlib::point p2)
     return sqrt(pow(p1.x() - p2.x(), 2) + pow(p1.y() - p2.y(), 2));
 }
 // Calculates the EAR threshold for sleepiness
-float get_threshold(VideoCapture cap)
+double get_threshold(VideoCapture cap)
 {
-    float EAR_sum = 0.0f;
+    double EAR_sum = 0.0;
     int iterator = 0;
     Mat original_frame, scaled_frame, grayscale_frame;
     while (true)
@@ -471,7 +489,7 @@ float get_threshold(VideoCapture cap)
             shapes = sp(dlib_img, face_dlib);
 
             // get EAR
-            float avg_EAR = get_EAR(shapes);
+            double avg_EAR = get_EAR(shapes);
             // Check if EAR is higher than minimum (eyes are likely to be open)
             if (avg_EAR > MIN_EAR_THRESH)
             {
@@ -508,7 +526,7 @@ float get_threshold(VideoCapture cap)
         }
     }
     // Calculate the threshold
-    float thresh = (EAR_sum / (float)FRAMES_FOR_CALIBRATION) - THRESHOLD_SENSITIVITY;
+    double thresh = (EAR_sum / (double)FRAMES_FOR_CALIBRATION) - THRESHOLD_SENSITIVITY;
             
     cout << Timestamp() << "After " << FRAMES_FOR_CALIBRATION << " frames average EAR threadhold " << thresh << endl;
     return thresh;
