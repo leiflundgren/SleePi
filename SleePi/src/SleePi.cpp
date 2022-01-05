@@ -15,6 +15,7 @@
 #include <opencv2/imgproc.hpp>
 #include <time.h>
 #include <chrono>
+#include <thread>
 
 #include "play_audio.h"
 #include "config.h"
@@ -168,16 +169,18 @@ int main(int argc, const char **argv)
 
     int last_face_result = 0;
     time_t last_face_change = 0L;
+    double sleep_ms = 0.0;
 
     bool video_started = false;
+
+    // Start clock for counting the time for executing the loop
+    auto last_fps = steady_clock::now();
 
     // Start main loop
     while (true)
     {
         Mat original_frame, scaled_frame, grayscale_frame;
 
-        // Start clock for counting the time for executing the loop
-        auto start_fps = steady_clock::now();
 
         // Wait for a new frame from camera
         cap.read(original_frame);
@@ -302,17 +305,17 @@ int main(int argc, const char **argv)
             }
 
             std::string str_fps;
+            double real_fps;
 
             {
                 auto end_fps = steady_clock::now();
                 // Time to process one frame
-                double time_for_cycle = duration_cast<duration<double>>(end_fps - start_fps).count();
+                double time_for_cycle = duration_cast<duration<double>>(end_fps - last_fps).count();
                 // frames processed per second
-                double real_fps = 1.0 / time_for_cycle;
+                real_fps = 1.0 / time_for_cycle;
                 
-                stringstream ss;
-                ss << " fps " << real_fps << "\n";
-                str_fps = ss.str();
+                str_fps = (stringstream() << " fps " << real_fps << "\n").str();
+                last_fps = end_fps;
             }
 
 
@@ -323,7 +326,12 @@ int main(int argc, const char **argv)
                 last_face_change = time(NULL);
             }
 
-
+            if (real_fps > args.max_fps && sleep_ms == 0)
+                sleep_ms = 100.0;
+            sleep_ms *= real_fps / args.max_fps;
+                cout << Timestamp() << "FPS is " << real_fps << ", higher than goal " << args.max_fps << ". Sleeping " << (long)sleep_ms << " ms." << endl;
+                
+            std::this_thread::sleep_for(std::chrono::milliseconds( (long) sleep_ms));
 
         }
         // Save frame to file

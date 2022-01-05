@@ -324,7 +324,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="S:\repos\SleePi-leiflundgren-github\SleePi\src\SleePi.cpp" />
     <ClCompile Include="S:\repos\SleePi-leiflundgren-github\SleePi\src\play_audio.cpp" />
     <ClCompile Include="S:\repos\SleePi-leiflundgren-github\SleePi\src\Helpers.cpp" />
-    <ClCompile Include="S:\repos\SleePi-leiflundgren-github\SleePi\src\CommandLine.cpp" /> 
+    <ClCompile Include="S:\repos\SleePi-leiflundgren-github\SleePi\src\CommandLine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="S:\repos\SleePi-leiflundgren-github\SleePi\build\ZERO_CHECK.vcxproj">

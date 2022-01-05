@@ -24,6 +24,7 @@ struct CommandLine
     bool log_events_stdout;
     bool play_alarm;
     double ear_threshold;
+    double max_fps;
     std::string capture_filename;
 
 

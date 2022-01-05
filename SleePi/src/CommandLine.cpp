@@ -32,6 +32,7 @@ CommandLine::CommandLine()
     , ALARM_LOC(Join(data_folder, "alarm.wav", '/'))
     , CALIBRATION_START_LOC(Join(data_folder, "calibration_start.wav", '/'))
     , CALIBRATION_END_LOC(Join(data_folder, "calibration_complete.wav", '/'))
+    , max_fps(100000.0)
 {}
 
 void CommandLine::Init(int argc, const char** argv)
@@ -53,6 +54,7 @@ void CommandLine::Init(int argc, const char** argv)
         parser.set_optional<bool>("landmarks", "show-landmarks", show_all_factial_landmarks, "Shows all 68 facial landmarks on the face");
         parser.set_optional<bool>("ear", "show-ear", show_ear_score, "Shows EAR score");
         parser.set_optional<double>("t", "ear-threshold", ear_threshold, "Pre-set EAR threadhold (rather than calibrate at startup)");
+        parser.set_optional<double>("fps", "fps", max_fps, "Max FPS (If faster than this, sleep a little");
 
         parser.run_and_exit_if_error();
 
@@ -63,6 +65,7 @@ void CommandLine::Init(int argc, const char** argv)
         show_all_factial_landmarks = parser.get<bool>("landmarks");
         show_ear_score = parser.get<bool>("ear");
         ear_threshold = parser.get<double>("t");
+        max_fps = parser.get<double>("fps");
 
         if ( !parser.get<std::string>("d").empty() )
             data_folder = parser.get<std::string>("d");
