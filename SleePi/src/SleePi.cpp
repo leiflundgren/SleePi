@@ -446,7 +446,7 @@ float get_threshold(VideoCapture cap)
         // gets a face as a rectangle object, returns 1 if face was not found
         int result = detect_face(grayscale_frame, face);
 
-        if (result == 1)
+        if (result == 0)
         {
             if ((args.show_video || args.capture_to_file))
             {
@@ -459,7 +459,7 @@ float get_threshold(VideoCapture cap)
                             2);
             }
         }
-        else if (result == 0)
+        else  // face
         {
             full_object_detection shapes;
             dlib::array2d<unsigned char> dlib_img;
@@ -509,6 +509,8 @@ float get_threshold(VideoCapture cap)
     }
     // Calculate the threshold
     float thresh = (EAR_sum / (float)FRAMES_FOR_CALIBRATION) - THRESHOLD_SENSITIVITY;
+            
+    cout << Timestamp() << "After " << FRAMES_FOR_CALIBRATION << " frames average EAR threadhold " << thresh << endl;
     return thresh;
 }
 // Converts OpenCV rectengle to dlib rectangle

@@ -41,16 +41,16 @@ void CommandLine::Init(int argc, const char** argv)
         cli::Parser parser(argc, argv);
         parser.enable_help();
         parser.set_optional<std::string>("d", "data-folder", data_folder, "Folder to read data-files from");
-        parser.set_optional<bool>("l", "--log", log_events_stdout, "Output detection messages to stdout");
-        parser.set_optional<bool>("s", "--video", show_video, "Enable showing video");
-        parser.set_optional<bool>("c", "--save-capture", capture_to_file, "Save captured video");
-        parser.set_optional<std::string>("o", "--caputure-file", "", "Alarm wav file");
-        parser.set_optional<bool>("e", "--show-eyes", show_eye_contour, "Show eye-contour");
-        parser.set_optional<bool>("alarm", "--alarm", play_alarm, "Alarm wav file");
-        parser.set_optional<std::string>("a", "--alarm-file", "", "Alarm wav file");
-        parser.set_optional<bool>("f", "--show-face", show_face_detection, "Show wether or not face is detected");
-        parser.set_optional<bool>("landmarks", "--show-landmarks", show_all_factial_landmarks, "Shows all 68 facial landmarks on the face");
-        parser.set_optional<bool>("ear", "--show-ear", show_ear_score, "Shows EAR score");
+        parser.set_optional<bool>("l", "log", log_events_stdout, "Output detection messages to stdout");
+        parser.set_optional<bool>("s", "video", show_video, "Enable showing video");
+        parser.set_optional<bool>("c", "save-capture", capture_to_file, "Save captured video");
+        parser.set_optional<std::string>("o", "caputure-file", "", "Alarm wav file");
+        parser.set_optional<bool>("e", "show-eyes", show_eye_contour, "Show eye-contour");
+        parser.set_optional<bool>("alarm", "alarm", play_alarm, "Alarm wav file");
+        parser.set_optional<std::string>("a", "alarm-file", "", "Alarm wav file");
+        parser.set_optional<bool>("f", "show-face", show_face_detection, "Show wether or not face is detected");
+        parser.set_optional<bool>("landmarks", "show-landmarks", show_all_factial_landmarks, "Shows all 68 facial landmarks on the face");
+        parser.set_optional<bool>("ear", "show-ear", show_ear_score, "Shows EAR score");
 
         parser.run_and_exit_if_error();
 
@@ -61,13 +61,13 @@ void CommandLine::Init(int argc, const char** argv)
         show_all_factial_landmarks = parser.get<bool>("landmarks");
         show_ear_score = parser.get<bool>("ear");
 
-        play_alarm = parser.get<bool>("alarm");
 
         if ( !parser.get<std::string>("d").empty() )
             data_folder = parser.get<std::string>("d");
 
-        if (!parser.get<std::string>("d").empty())
-            ALARM_LOC = parser.get<std::string>("d");
+        play_alarm = parser.get<bool>("alarm");
+        if (!parser.get<std::string>("a").empty())
+            ALARM_LOC = parser.get<std::string>("a");
         else 
             ALARM_LOC = Join(data_folder, "alarm.wav", '/');
 
