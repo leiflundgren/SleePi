@@ -36,6 +36,7 @@ add_executable(SleePi
   ${CMAKE_SOURCE_DIR}/src/SleePi.cpp
   ${CMAKE_SOURCE_DIR}/src/play_audio.cpp
   ${CMAKE_SOURCE_DIR}/src/Helpers.cpp
+  ${CMAKE_SOURCE_DIR}/src/CommandLine.cpp
   )
 
 # Link libraries
