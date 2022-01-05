@@ -12,26 +12,8 @@ static std::string Join(std::string s1, std::string s2, char separator)
     return s1 + separator + s2;
 }
 
-static void UpdateFolders(CommandLine& args)
-{
-    args.face_cascade_name = Join(args.data_folder, "haarcascade_frontalface_alt.xml", '/');
-    args.shape_predictor_path = Join(args.data_folder, "shape_predictor_68_face_landmarks.dat", '/');
-
-    args.ALARM_LOC = Join(args.data_folder, "alarm.wav", '/');
-    args.CALIBRATION_START_LOC = Join(args.data_folder, "calibration_start.wav", '/');
-    args.CALIBRATION_END_LOC = Join(args.data_folder, "calibration_complete.wav", '/');
-}
 
 CommandLine::CommandLine()
-{
-    Init(0, nullptr);
-}
-CommandLine::CommandLine(int argc, const char** argv)
-{
-    Init(argc, argv);
-}
-
-void CommandLine::Init(int argc, const char** argv)
 {
     data_folder = "../static/";
     show_video = true;
@@ -42,9 +24,18 @@ void CommandLine::Init(int argc, const char** argv)
     show_face_detection = true;
     show_all_factial_landmarks = false;
     log_events_stdout = true;
+    play_alarm = true;
 
-    UpdateFolders(*this);
+    face_cascade_name = Join(data_folder, "haarcascade_frontalface_alt.xml", '/');
+    shape_predictor_path = Join(data_folder, "shape_predictor_68_face_landmarks.dat", '/');
 
+    ALARM_LOC = Join(data_folder, "alarm.wav", '/');
+    CALIBRATION_START_LOC = Join(data_folder, "calibration_start.wav", '/');
+    CALIBRATION_END_LOC = Join(data_folder, "calibration_complete.wav", '/');
+}
+
+void CommandLine::Init(int argc, const char** argv)
+{
     if (argc > 0 && argv != nullptr)
     {
         cli::Parser parser(argc, argv);
@@ -53,14 +44,41 @@ void CommandLine::Init(int argc, const char** argv)
         parser.set_optional<bool>("l", "--log", log_events_stdout, "Output detection messages to stdout");
         parser.set_optional<bool>("s", "--video", show_video, "Enable showing video");
         parser.set_optional<bool>("c", "--save-capture", capture_to_file, "Save captured video");
+        parser.set_optional<std::string>("o", "--caputure-file", "", "Alarm wav file");
         parser.set_optional<bool>("e", "--show-eyes", show_eye_contour, "Show eye-contour");
-        parser.set_optional<std::string>("a", "--alarm", ALARM_LOC, "Alarm wav file");
+        parser.set_optional<bool>("alarm", "--alarm", play_alarm, "Alarm wav file");
+        parser.set_optional<std::string>("a", "--alarm-file", "", "Alarm wav file");
         parser.set_optional<bool>("f", "--show-face", show_face_detection, "Show wether or not face is detected");
-        parser.set_optional<bool>("a", "--show-landmarks", show_all_factial_landmarks, "Shows all 68 facial landmarks on the face");
+        parser.set_optional<bool>("landmarks", "--show-landmarks", show_all_factial_landmarks, "Shows all 68 facial landmarks on the face");
+        parser.set_optional<bool>("ear", "--show-ear", show_ear_score, "Shows EAR score");
 
         parser.run_and_exit_if_error();
-    
-        UpdateFolders(*this);
+
+        log_events_stdout = parser.get<bool>("l");
+        show_video = parser.get<bool>("s");
+        show_eye_contour = parser.get<bool>("e");
+        show_face_detection = parser.get<bool>("f");
+        show_all_factial_landmarks = parser.get<bool>("landmarks");
+        show_ear_score = parser.get<bool>("ear");
+
+        play_alarm = parser.get<bool>("alarm");
+
+        if ( !parser.get<std::string>("d").empty() )
+            data_folder = parser.get<std::string>("d");
+
+        if (!parser.get<std::string>("d").empty())
+            ALARM_LOC = parser.get<std::string>("d");
+        else 
+            ALARM_LOC = Join(data_folder, "alarm.wav", '/');
+
+        capture_to_file = parser.get<bool>("c");
+        if (!parser.get<std::string>("o").empty())
+            capture_filename = parser.get<std::string>("o");
+
+
+        CALIBRATION_START_LOC = Join(data_folder, "calibration_start.wav", '/');
+        CALIBRATION_END_LOC = Join(data_folder, "calibration_complete.wav", '/');
+        
     }
 }
 

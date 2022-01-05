@@ -23,6 +23,7 @@ struct CommandLine
     bool show_face_detection;
     bool show_all_factial_landmarks;
     bool log_events_stdout;
+    bool play_alarm;
     std::string capture_filename;
 
 

@@ -129,7 +129,7 @@ int main(int argc, const char **argv)
         }
     }
     // Load audio files and initialise playback
-    audio.init_playback(args.CALIBRATION_START_LOC, args.CALIBRATION_END_LOC, args.ALARM_LOC);
+    audio.init_playback(args.CALIBRATION_START_LOC, args.CALIBRATION_END_LOC, args.play_alarm ? args.ALARM_LOC : "");
 
     Mat original_frame, scaled_frame, grayscale_frame;
     float accumulator = 1.0;
@@ -144,8 +144,12 @@ int main(int argc, const char **argv)
     std::thread thread2(&PlayAudio::play_calibartion_completed, &audio);
     thread2.detach();
     // Initialise the alarm file for playback
-    std::thread thread3(&PlayAudio::init_alarm, &audio);
-    thread3.detach();
+    std::thread thread3;
+    if (args.play_alarm)
+    {
+        thread3 = std::thread(&PlayAudio::init_alarm, &audio);
+        thread3.detach();
+    }
 
     cout << Timestamp() << "###########################################\n\nLoaded, detection starting" << endl;
 

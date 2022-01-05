@@ -210,11 +210,14 @@ int PlayAudio::init_playback(const std::string& calibrate_start_file, const std:
     }
 
     // Load calibration completed sound
-    result = ma_decoder_init_file_wav(alarm_file.c_str(), &decoderConfig, &g_pDecoders[2]);
-    if (result != MA_SUCCESS)
+    if (!alarm_file.empty())
     {
-        std::cerr << "Failed to load file from " << alarm_file<< "\n";
-        return -2;
+        result = ma_decoder_init_file_wav(alarm_file.c_str(), &decoderConfig, &g_pDecoders[2]);
+        if (result != MA_SUCCESS)
+        {
+            std::cerr << "Failed to load file from " << alarm_file << "\n";
+            return -2;
+        }
     }
 
     // Configure the device using speified parameters
