@@ -314,7 +314,9 @@ int main(int argc, const char **argv)
                 // frames processed per second
                 real_fps = 1.0 / time_for_cycle;
                 
-                str_fps = (stringstream() << " fps " << real_fps << "\n").str();
+                stringstream ss;
+                ss << " fps " << real_fps << endl;
+                str_fps = ss.str();
                 last_fps = end_fps;
             }
 
