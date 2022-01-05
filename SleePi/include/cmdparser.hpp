@@ -397,7 +397,7 @@ namespace cli {
 						current = associated;
 						associated->handled = true;
 					} else if (current == nullptr) {
-						error << no_default();
+						error << no_default(_arguments[i]);
 						return false;
 					} else {
 						current->arguments.push_back(_arguments[i]);
@@ -550,9 +550,10 @@ namespace cli {
 			return ss.str();
 		}
 
-		std::string no_default() const {
+		std::string no_default(std::string name) const {
 			std::stringstream ss { };
 			ss << "No default parameter has been specified.\n";
+			ss << "Unknown parameter: " << name << "\n";
 			ss << "The given argument must be used with a parameter.\n";
 			print_help(ss);
 			return ss.str();

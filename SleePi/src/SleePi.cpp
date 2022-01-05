@@ -303,8 +303,6 @@ int main(int argc, const char **argv)
 
             std::string str_fps;
 
-            // Print FPS each loop
-            if (PRINT_FPS)
             {
                 auto end_fps = steady_clock::now();
                 // Time to process one frame
@@ -318,10 +316,10 @@ int main(int argc, const char **argv)
             }
 
 
-            if (last_face_change == 0)
+            if (last_face_result == 0)
             {
                 cout << Timestamp() << "FACE DETECTED. (We have been face-less since " << Timestamp(last_face_change) << str_fps << endl;
-                last_face_change = 1;
+                last_face_result = 1;
                 last_face_change = time(NULL);
             }
 

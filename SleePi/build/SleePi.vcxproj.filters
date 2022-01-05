@@ -1,42 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="$(SolutionDir)..\src\SleePi.cpp">
+    <ClCompile Include="S:\repos\SleePi-leiflundgren-github\SleePi\src\SleePi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)..\src\Helpers.cpp">
+    <ClCompile Include="S:\repos\SleePi-leiflundgren-github\SleePi\src\play_audio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)..\src\play_audio.cpp">
+    <ClCompile Include="S:\repos\SleePi-leiflundgren-github\SleePi\src\Helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\CommandLine.cpp">
+    <ClCompile Include="S:\repos\SleePi-leiflundgren-github\SleePi\src\CommandLine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="$(SolutionDir)..\CMakeLists.txt" />
+    <CustomBuild Include="S:\repos\SleePi-leiflundgren-github\SleePi\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">
       <UniqueIdentifier>{D8914E15-BC24-37AB-9809-F86DBF2CA6B1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Include Files">
-      <UniqueIdentifier>{3739d5cd-c19c-4306-a9ca-3ee848a6b836}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\include\config.h">
-      <Filter>Include Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\Helpers.h">
-      <Filter>Include Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\play_audio.h">
-      <Filter>Include Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\CommandLine.h">
-      <Filter>Include Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>
