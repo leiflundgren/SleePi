@@ -209,10 +209,10 @@ int main(int argc, const char **argv)
                             CV_RGB(255, 0, 0),
                             2);
             }
-            if (last_face_change != 0)
+            if (last_face_result != 0)
             {
                 cout << Timestamp() << "NO FACE DETECTED. (We have had a face since " << Timestamp(last_face_change) << " " << endl;
-                last_face_change = 0;
+                last_face_result = 0;
                 last_face_change = time(NULL);
             }
         }

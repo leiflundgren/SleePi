@@ -42,7 +42,8 @@ void CommandLine::Init(int argc, const char** argv)
         parser.enable_help();
         parser.set_optional<std::string>("d", "data-folder", data_folder, "Folder to read data-files from");
         parser.set_optional<bool>("l", "log", log_events_stdout, "Output detection messages to stdout");
-        parser.set_optional<bool>("s", "video", show_video, "Enable showing video");
+        parser.set_optional<bool>("s", "video", false, "Enable showing video");
+        parser.set_optional<bool>("no-video", "no-video", false, "Disble showing video");
         parser.set_optional<bool>("c", "save-capture", capture_to_file, "Save captured video");
         parser.set_optional<std::string>("o", "caputure-file", "", "Alarm wav file");
         parser.set_optional<bool>("e", "show-eyes", show_eye_contour, "Show eye-contour");
@@ -56,7 +57,7 @@ void CommandLine::Init(int argc, const char** argv)
         parser.run_and_exit_if_error();
 
         log_events_stdout = parser.get<bool>("l");
-        show_video = parser.get<bool>("s");
+        show_video = parser.get<bool>("s") && !parser.get<bool>("no-video");
         show_eye_contour = parser.get<bool>("e");
         show_face_detection = parser.get<bool>("f");
         show_all_factial_landmarks = parser.get<bool>("landmarks");
