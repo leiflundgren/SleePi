@@ -8,18 +8,21 @@
 /// </summary>
 struct CommandLine
 {
-    CommandLine(int argc, char** argv);
+    CommandLine(int argc, const char** argv);
     CommandLine();
     ~CommandLine();
 
 
-    void Init(int argc, char** argv);
+    void Init(int argc, const char** argv);
 
     std::string data_folder;
     bool show_video;
     bool capture_to_file;
     bool show_eye_contour;
     bool show_ear_score;
+    bool show_face_detection;
+    bool show_all_factial_landmarks;
+    bool log_events_stdout;
     std::string capture_filename;
 
 

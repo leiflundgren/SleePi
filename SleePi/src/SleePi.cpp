@@ -80,7 +80,7 @@ void draw_eye_contours(Mat frame, full_object_detection shapes);
 static CommandLine args;
 
 // Main function for executing the program
-int main(int argc, char **argv)
+int main(int argc, const char **argv)
 {
     args.Init(argc, argv);
     PlayAudio audio;
@@ -198,17 +198,10 @@ int main(int argc, char **argv)
         // Got 1 face (or more)
         else 
         {
-            if (last_face_change == 0)
-            {
-                cout << Timestamp() << "FACE DETECTED. (We have been face-less since " << Timestamp(last_face_change) << endl;
-                last_face_change = 1;
-                last_face_change = time(NULL);
-            }
-
-
+       
 
             // Display rectange of detected face
-            if ((args.show_video || args.capture_to_file) && SHOW_FACE_DETECTION)
+            if ((args.show_video || args.capture_to_file) && args.show_face_detection)
             {
                 cv::rectangle(scaled_frame, face, Scalar(255, 0, 0), 1, 8, 0);
             }
@@ -222,7 +215,7 @@ int main(int argc, char **argv)
             // Predict facial landmark locations and store it in shapes object
             shapes = sp(dlib_img, face_dlib);
             // Display facial landmarks
-            if ((args.show_video || args.capture_to_file) && SHOW_FACIAL_LANDMARKS)
+            if ((args.show_video || args.capture_to_file) && args.show_all_factial_landmarks)
             {
                 for (int i = 0; i <= 68; i++)
                 {
@@ -233,7 +226,7 @@ int main(int argc, char **argv)
                 }
             }
             // Draw contours around the eyes
-            if ((args.show_video || args.capture_to_file) && SHOW_EYE_CONTOURS)
+            if ((args.show_video || args.capture_to_file) && args.show_eye_contour)
             {
                 draw_eye_contours(scaled_frame, shapes);
             }
@@ -243,7 +236,7 @@ int main(int argc, char **argv)
             // Calculate EMA
             accumulator = ALPHA * avg_EAR + (1.0 - ALPHA) * accumulator;
             // Show current EAR
-            if (args.show_video && SHOW_EAR)
+            if (args.show_video && args.show_ear_score)
             {
                 draw_EAR(scaled_frame, avg_EAR);
             }
@@ -286,6 +279,9 @@ int main(int argc, char **argv)
                     audio.stop_playing();
                 }
             }
+
+            std::string str_fps;
+
             // Print FPS each loop
             if (PRINT_FPS)
             {
@@ -294,8 +290,22 @@ int main(int argc, char **argv)
                 double time_for_cycle = duration_cast<duration<double>>(end_fps - start_fps).count();
                 // frames processed per second
                 double real_fps = 1.0 / time_for_cycle;
-                cout << Timestamp() << "fps " << real_fps << "\n";
+                
+                stringstream ss;
+                ss << " fps " << real_fps << "\n";
+                str_fps = ss.str();
             }
+
+
+            if (last_face_change == 0)
+            {
+                cout << Timestamp() << "FACE DETECTED. (We have been face-less since " << Timestamp(last_face_change) << str_fps << endl;
+                last_face_change = 1;
+                last_face_change = time(NULL);
+            }
+
+
+
         }
         // Save frame to file
         if (args.capture_to_file)

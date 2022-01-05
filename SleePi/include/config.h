@@ -40,15 +40,15 @@ const double TIME_THRESHOLD = 1.0;
 // bool SAVE_TO_FILE = true; //
 // If both SHOW_VIDEO_OUTPUT and SAVE_TO_FILE are false, the following parameters have no effect.
 // Shows a rectangle around the detected face
-bool SHOW_FACE_DETECTION = true;
+// bool SHOW_FACE_DETECTION = true;
 // Shows all 68 facial landmarks on the face
-bool SHOW_FACIAL_LANDMARKS = false;
+// bool SHOW_FACIAL_LANDMARKS = false;
 // Draws a contour around the eyes
-bool SHOW_EYE_CONTOURS = true;
+//bool SHOW_EYE_CONTOURS = true;
 // Displays the current EAR value
-bool SHOW_EAR = true;
+//bool SHOW_EAR = true;
 
-const bool LOG_EVENTS_STDOUT = true;
+// const bool LOG_EVENTS_STDOUT = true;
 
 // Audio configuration
 
