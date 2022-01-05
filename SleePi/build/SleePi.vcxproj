@@ -324,6 +324,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="$(SolutionDir)..\src\SleePi.cpp" />
     <ClCompile Include="$(SolutionDir)..\src\play_audio.cpp" />
     <ClCompile Include="$(SolutionDir)..\src\Helpers.cpp" />
+    <ClCompile Include="..\src\CommandLine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(SolutionDir)..\build\ZERO_CHECK.vcxproj">
@@ -336,6 +337,12 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Project>{D67FDE50-3282-39A9-91DC-D80DBB29F6E5}</Project>
       <Name>dlib</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\CommandLine.h" />
+    <ClInclude Include="..\include\config.h" />
+    <ClInclude Include="..\include\Helpers.h" />
+    <ClInclude Include="..\include\play_audio.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

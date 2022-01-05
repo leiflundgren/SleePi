@@ -20,6 +20,8 @@
 #include "config.h"
 #include "Helpers.h"
 
+#include "CommandLine.h"
+
 using namespace cv;
 using namespace std;
 using namespace dlib;
@@ -37,26 +39,60 @@ static dlib::rectangle openCVRectToDlib(cv::Rect r);
 int detect_face(Mat frame, cv::Rect &face);
 void draw_EAR(Mat frame, float EAR);
 void draw_eye_contours(Mat frame, full_object_detection shapes);
+//
+//String data_folder = "../static/";
+//
+//String face_cascade_name = data_folder + "haarcascade_frontalface_alt.xml";
+//String shape_predictor_path = data_folder + "shape_predictor_68_face_landmarks.dat";
+//
+//String ALARM_LOC = data_folder + "alarm.wav";
+//String CALIBRATION_START_LOC = data_folder + "calibration_start.wav";
+//String CALIBRATION_END_LOC = data_folder + "calibration_complete.wav";
 
 
 
+//int parse_commandline(int argc, char** argv)
+//{
+//    CLI::App app{ "SleepPi - program that tries to use a camera to see if there is a face there or not." };
+//
+//    
+//    app.add_option("-d,--data-folder", data_folder, "Folder to load dat-files from");
+//    app.add_option("--video", args.show_video, "Enable showing video");
+//    app.add_option("!-nv,!--no-video", args.show_video, "Disable showing video");
+//              
+//    app.parse((argc), (argv)); 
+//
+//    String data_folder = app.get_option("d");
+//    if (!data_folder.empty())
+//    {
+//        face_cascade_name = data_folder + "haarcascade_frontalface_alt.xml";
+//        shape_predictor_path = data_folder + "shape_predictor_68_face_landmarks.dat";
+//
+//        ALARM_LOC = data_folder + "alarm.wav";
+//        CALIBRATION_START_LOC = data_folder + "calibration_start.wav";
+//        CALIBRATION_END_LOC = data_folder + "calibration_complete.wav";
+//    }
+//
+//    return 0;
+//}
+
+
+static CommandLine args;
 
 // Main function for executing the program
 int main(int argc, char **argv)
 {
-    // Set the relative locations of face cascade and shape perdictor
-    String face_cascade_name = "../static/haarcascade_frontalface_alt.xml";
-    String shape_predictor_path = "../static/shape_predictor_68_face_landmarks.dat";
+    args.Init(argc, argv);
+    PlayAudio audio;
 
-
-    cout << Timestamp() << "loading shapes from " << shape_predictor_path << endl;
+    cout << Timestamp() << "loading shapes from " << args.shape_predictor_path << endl;
 
     // Load the shape predictor for facial landmark detection
-    deserialize(shape_predictor_path) >> sp;
+    deserialize(args.shape_predictor_path) >> sp;
 
-    cout << Timestamp() << "loading face_cascade from " << face_cascade_name << endl;
+    cout << Timestamp() << "loading face_cascade from " << args.face_cascade_name << endl;
 
-    if (!face_cascade.load(face_cascade_name))
+    if (!face_cascade.load(args.face_cascade_name))
     {
         cout << Timestamp() << "--(!)Error loading face cascade\n";
         return -1;
@@ -82,10 +118,10 @@ int main(int argc, char **argv)
     double dWidth = cap.get(CAP_PROP_FRAME_WIDTH);   //get the width of frames of the video
     double dHeight = cap.get(CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
     // Prepares the information for video saving
-    if (SAVE_TO_FILE)
+    if (args.capture_to_file && !args.capture_filename.empty())
     {
         Size vid_out = Size((int)dWidth * SCALE_FACTOR, (int)dHeight * SCALE_FACTOR);
-        outputVideo.open("./capture.avi", VideoWriter::fourcc('D', 'I', 'V', 'X'), 24, vid_out, true);
+        outputVideo.open(args.capture_filename, VideoWriter::fourcc('D', 'I', 'V', 'X'), 24, vid_out, true);
         if (!outputVideo.isOpened())
         {
             cerr << Timestamp() << "Could not open the output video file for write\n";
@@ -93,22 +129,22 @@ int main(int argc, char **argv)
         }
     }
     // Load audio files and initialise playback
-    init_playback();
+    audio.init_playback(args.CALIBRATION_START_LOC, args.CALIBRATION_END_LOC, args.ALARM_LOC);
 
     Mat original_frame, scaled_frame, grayscale_frame;
     float accumulator = 1.0;
     auto start_thresh = steady_clock::now();
     // Detaching because the capture can start as the instruction is being played
-    std::thread thread1(play_calibration_start);
+    std::thread thread1(&PlayAudio::play_calibration_start, &audio);
     thread1.detach();
     // Set the dynamic threhold for sleepiness
     float thresh = get_threshold(cap);
     cout << Timestamp() << "thresh got " << thresh << "\n";
     // Play the sound of calibration completion
-    std::thread thread2(play_calibartion_completed);
+    std::thread thread2(&PlayAudio::play_calibartion_completed, &audio);
     thread2.detach();
     // Initialise the alarm file for playback
-    std::thread thread3(init_alarm);
+    std::thread thread3(&PlayAudio::init_alarm, &audio);
     thread3.detach();
 
     cout << Timestamp() << "###########################################\n\nLoaded, detection starting" << endl;
@@ -142,7 +178,7 @@ int main(int argc, char **argv)
         // No face was detected
         if (face_count == 0)
         {
-            if ((SHOW_VIDEO_OUTPUT || SAVE_TO_FILE))
+            if ((args.show_video || args.capture_to_file))
             {
                 cv::putText(scaled_frame,
                             "NO FACE DETECTED",
@@ -172,7 +208,7 @@ int main(int argc, char **argv)
 
 
             // Display rectange of detected face
-            if ((SHOW_VIDEO_OUTPUT || SAVE_TO_FILE) && SHOW_FACE_DETECTION)
+            if ((args.show_video || args.capture_to_file) && SHOW_FACE_DETECTION)
             {
                 cv::rectangle(scaled_frame, face, Scalar(255, 0, 0), 1, 8, 0);
             }
@@ -186,7 +222,7 @@ int main(int argc, char **argv)
             // Predict facial landmark locations and store it in shapes object
             shapes = sp(dlib_img, face_dlib);
             // Display facial landmarks
-            if ((SHOW_VIDEO_OUTPUT || SAVE_TO_FILE) && SHOW_FACIAL_LANDMARKS)
+            if ((args.show_video || args.capture_to_file) && SHOW_FACIAL_LANDMARKS)
             {
                 for (int i = 0; i <= 68; i++)
                 {
@@ -197,7 +233,7 @@ int main(int argc, char **argv)
                 }
             }
             // Draw contours around the eyes
-            if ((SHOW_VIDEO_OUTPUT || SAVE_TO_FILE) && SHOW_EYE_CONTOURS)
+            if ((args.show_video || args.capture_to_file) && SHOW_EYE_CONTOURS)
             {
                 draw_eye_contours(scaled_frame, shapes);
             }
@@ -207,7 +243,7 @@ int main(int argc, char **argv)
             // Calculate EMA
             accumulator = ALPHA * avg_EAR + (1.0 - ALPHA) * accumulator;
             // Show current EAR
-            if (SHOW_VIDEO_OUTPUT && SHOW_EAR)
+            if (args.show_video && SHOW_EAR)
             {
                 draw_EAR(scaled_frame, avg_EAR);
             }
@@ -221,7 +257,7 @@ int main(int argc, char **argv)
                 if (elapsed_seconds >= TIME_THRESHOLD)
                 {
                     // Show sleepiness indicator
-                    if ((SHOW_VIDEO_OUTPUT || SAVE_TO_FILE))
+                    if ((args.show_video || args.capture_to_file))
                     {
                         cv::putText(scaled_frame,
                                     "SLEEPINESS DETECTED",
@@ -234,7 +270,7 @@ int main(int argc, char **argv)
                     // Play only when alarm sample is initialised and don't call new threads if the alarm is already playing
                     if (!alarmON && alarmReady)
                     {
-                        std::thread thre_obj(start_alarm);
+                        std::thread thre_obj(&PlayAudio::start_alarm, &audio);
                         // Can be detached, because it will loop until stop signal is sent
                         thre_obj.detach();
                     }
@@ -247,7 +283,7 @@ int main(int argc, char **argv)
                 // Send signal to stop alarm only if it is on
                 if (alarmON)
                 {
-                    stop_playing();
+                    audio.stop_playing();
                 }
             }
             // Print FPS each loop
@@ -262,12 +298,12 @@ int main(int argc, char **argv)
             }
         }
         // Save frame to file
-        if (SAVE_TO_FILE)
+        if (args.capture_to_file)
         {
             outputVideo.write(scaled_frame);
         }
         // Display frame in a window
-        if (SHOW_VIDEO_OUTPUT)
+        if (args.show_video)
         {
             cv::imshow("Live", scaled_frame);
             // Stop on any keypress (required for imshow function)
@@ -299,18 +335,17 @@ int detect_face(Mat frame, cv::Rect &face)
     // If more than one face is found, take the biggest one
     else // face_count > 1
     {
-        size_t max_size = faces[0].area();
-        size_t max_index = 0;
-        for (size_t i = 1; i < face_count; i++)
+        size_t max_size = 0;
+        for (size_t i = 0; i < face_count; i++)
         {
-            if (faces[i].area() > max_size)
+            size_t area = faces[i].area();
+            if ( area > max_size)
             {
-                max_size = faces[i].area();
-                max_index = i;
+                max_size = area;
+                face = faces[i];
             }
-            face = faces[max_index];
         }
-        cout << Timestamp() << "Expected only 1 face. Face index " << max_index << " is the biggest face\n";
+        cout << Timestamp() << "Expected only 1 face. Took bigest face areo=" << max_size << "\n";
     }
     return face_count;
 }
@@ -399,7 +434,7 @@ float get_threshold(VideoCapture cap)
 
         if (result == 1)
         {
-            if ((SHOW_VIDEO_OUTPUT || SAVE_TO_FILE))
+            if ((args.show_video || args.capture_to_file))
             {
                 cv::putText(scaled_frame,
                             "NO FACE DETECTED",
@@ -436,7 +471,7 @@ float get_threshold(VideoCapture cap)
             break;
         }
         // Show video and/or save to file
-        if ((SHOW_VIDEO_OUTPUT || SAVE_TO_FILE))
+        if ((args.show_video || args.capture_to_file))
         {
             cv::putText(scaled_frame,
                         "CALIBRATION MODE",
@@ -445,14 +480,14 @@ float get_threshold(VideoCapture cap)
                         1,
                         CV_RGB(255, 0, 0),
                         2);
-            if (SHOW_VIDEO_OUTPUT)
+            if (args.show_video)
             { // imshow function needs this to process its enent loop
                 // Stops the application on any keypress
                 imshow("Live", scaled_frame);
                 if (waitKey(1) >= 0)
                     break;
             }
-            if (SAVE_TO_FILE)
+            if (args.capture_to_file)
             {
                 outputVideo.write(scaled_frame);
             }

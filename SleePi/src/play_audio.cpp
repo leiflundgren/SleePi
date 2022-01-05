@@ -6,6 +6,10 @@
 
 #include "config.h"
 
+#include "Helpers.h"
+
+#include "play_audio.h"
+
 ma_decoder decoder;
 ma_device device;
 ma_device_config config;
@@ -25,7 +29,7 @@ bool alarmReady = false;
 bool alarmON = false;
 
 // Initialises the alarm sample
-int init_alarm()
+int PlayAudio::init_alarm()
 {
     // If this is true, it means that the vocal indication of the system's status has not yet finished playing and we should wait.
     if (isPlayingNonloopSample)
@@ -54,7 +58,7 @@ int init_alarm()
     return 0;
 }
 // Starts playing the alarm sammple
-int start_alarm()
+int PlayAudio::start_alarm()
 {
     printf("Start alarm called \n");
     alarmON = true;
@@ -69,7 +73,7 @@ int start_alarm()
     return 0;
 }
 // Plays the audio sample indicating the start of calibration
-int play_calibration_start()
+int PlayAudio::play_calibration_start()
 {
     printf("caliration start called\n");
     isPlayingNonloopSample = true;
@@ -94,7 +98,7 @@ int play_calibration_start()
     return 0;
 }
 // Plays the audio sample indicating the end of calibration
-int play_calibartion_completed()
+int PlayAudio::play_calibartion_completed()
 {
     // If this is true then the previous audio sample has not finished, therefore it must wait
     if (isPlayingNonloopSample)
@@ -129,7 +133,7 @@ int play_calibartion_completed()
     return 0;
 }
 // Stops currently playing audio, should only be used to stop the looping alarm sample.
-int stop_playing()
+int PlayAudio::stop_playing()
 {
     printf("Stopping playback \n");
     // We only want this function to execute if currently playing sound is the alarm.
@@ -178,7 +182,7 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uin
     (void)pInput;
 }
 // Loads the audio samples and initialises audio device
-int init_playback()
+int PlayAudio::init_playback(const std::string& calibrate_start_file, const std::string& calibrate_finished_file, const std::string& alarm_file)
 {
     ma_result result;
 
@@ -191,25 +195,25 @@ int init_playback()
     ma_decoder_config decoderConfig = ma_decoder_config_init(SAMPLE_FORMAT, CHANNEL_COUNT, SAMPLE_RATE);
 
     // Load alarm sound
-    result = ma_decoder_init_file_wav(CALIBRATION_START_LOC, &decoderConfig, &g_pDecoders[0]);
+    result = ma_decoder_init_file_wav(calibrate_start_file.c_str(), &decoderConfig, &g_pDecoders[0]);
     if (result != MA_SUCCESS)
     {
-        std::cerr << "Failed to load file from " << CALIBRATION_START_LOC << "\n";
+        std::cerr << "Failed to load file from " << calibrate_start_file<< "\n";
         return -2;
     }
     // Load calibration start sound
-    result = ma_decoder_init_file_wav(CALIBRATION_END_LOC, &decoderConfig, &g_pDecoders[1]);
+    result = ma_decoder_init_file_wav(calibrate_finished_file.c_str(), &decoderConfig, &g_pDecoders[1]);
     if (result != MA_SUCCESS)
     {
-        std::cerr << "Failed to load file from " << CALIBRATION_END_LOC << "\n";
+        std::cerr << "Failed to load file from " << calibrate_finished_file<< "\n";
         return -2;
     }
 
     // Load calibration completed sound
-    result = ma_decoder_init_file_wav(ALARM_LOC, &decoderConfig, &g_pDecoders[2]);
+    result = ma_decoder_init_file_wav(alarm_file.c_str(), &decoderConfig, &g_pDecoders[2]);
     if (result != MA_SUCCESS)
     {
-        std::cerr << "Failed to load file from " << ALARM_LOC << "\n";
+        std::cerr << "Failed to load file from " << alarm_file<< "\n";
         return -2;
     }
 

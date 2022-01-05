@@ -10,6 +10,9 @@
     <ClCompile Include="$(SolutionDir)..\src\play_audio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\CommandLine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="$(SolutionDir)..\CMakeLists.txt" />
@@ -18,5 +21,22 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{D8914E15-BC24-37AB-9809-F86DBF2CA6B1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Include Files">
+      <UniqueIdentifier>{3739d5cd-c19c-4306-a9ca-3ee848a6b836}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\config.h">
+      <Filter>Include Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Helpers.h">
+      <Filter>Include Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\play_audio.h">
+      <Filter>Include Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\CommandLine.h">
+      <Filter>Include Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
